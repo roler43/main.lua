@@ -1,101 +1,68 @@
---[[
-    BEOK SOFTWARE | BloxStrike Edition
-    Developed for Mobile & PC
-    Key: strike
-]]
+-- BEOK SOFTWARE V2 | HARD PROTECT
+repeat task.wait() until game:IsLoaded()
 
--- Блок Анти-Бана (Запускается первым)
-local function ProtectClient()
-    local g = game
-    local mt = getrawmetatable(g)
-    setreadonly(mt, false)
-    local oldIndex = mt.__index
-
-    mt.__index = newcclosure(function(t, k)
-        if k == "WalkSpeed" or k == "JumpPower" then
-            return 16 -- Возвращаем стандартные значения при проверке античитом
+-- БЛОК СУПЕР АНТИ-БАНА (Stealth Mode)
+local function UltraProtect()
+    -- Удаляем методы слежки
+    local raw = getrawmetatable(game)
+    setreadonly(raw, false)
+    local oldNamecall = raw.__namecall
+    
+    raw.__namecall = newcclosure(function(self, ...)
+        local method = getnamecallmethod()
+        local args = {...}
+        
+        -- Блокируем отправку репортов античита на сервер
+        if method == "FireServer" and (tostring(self) == "MainEvent" or tostring(self) == "Checker") then
+            return nil
+        end
+        return oldNamecall(self, unpack(args))
+    end)
+    
+    -- Скрываем чит от проверок на WalkSpeed и GUI
+    local oldIndex = raw.__index
+    raw.__index = newcclosure(function(t, k)
+        if not checkcaller() and (k == "WalkSpeed" or k == "JumpPower") then
+            return 16
         end
         return oldIndex(t, k)
     end)
-    setreadonly(mt, true)
-    
-    -- Очистка консоли от ошибок скрипта (скрытность)
-    print("BEOK: Anti-Ban Protection Loaded.")
+    setreadonly(raw, true)
 end
 
-ProtectClient()
+-- Запуск защиты
+pcall(UltraProtect)
 
--- Загрузка интерфейса
-local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
+-- БИБЛИОТЕКА МЕНЮ (Минималистичная, чтобы не палиться)
+local Library = loadstring(game:HttpGet("https://raw.githubusercontent.com/Venyx/Venyx-UI-Library/main/source.lua"))()
+local Venyx = Library.new("BEOK SOFTWARE | ULTIMATE", 5013109572)
 
-local Window = Rayfield:CreateWindow({
-   Name = "BEOK SOFTWARE | HUB",
-   LoadingTitle = "Загрузка системы BEOK...",
-   LoadingSubtitle = "by BEOK Team",
-   ConfigurationSaving = {
-      Enabled = true,
-      FolderName = "BEOK_Configs",
-      FileName = "MainSettings"
-   },
-   KeySystem = true,
-   KeySettings = {
-      Title = "Авторизация BEOK",
-      Subtitle = "Введите ключ",
-      Note = "Ключ доступа: strike",
-      FileName = "BeokKey",
-      SaveKey = true,
-      Key = {"strike"} 
-   }
-})
+-- КЛЮЧ (Всегда strike)
+local Auth = Venyx:addPage("Auth", 5013109572)
+local KeySec = Auth:addSection("Система доступа")
 
--- Вкладка со скриптами (все твои ссылки здесь)
-local MainTab = Window:CreateTab("Читы", 4483362458)
+KeySec:addTextbox("Введите ключ", "strike", function(text)
+    if text == "strike" then
+        Venyx:Notify("Успех", "Доступ разрешен!")
+    end
+end)
 
-MainTab:CreateSection("Выберите версию для инжекта")
+-- ФУНКЦИОНАЛ (Вшиваем лучшее сразу)
+local Main = Venyx:addPage("Main", 5013109572)
+local Combat = Main:addSection("Убийство")
 
-MainTab:CreateButton({
-   Name = "RageBot (Самый мощный) v135239",
-   Callback = function()
-       loadstring(game:HttpGet("https://rawscripts.net/raw/DUST-II-BloxStrike-NEW-WALLBANG-RAGEBOT-AUTOSHOOT-TRIGGERBOT-AIMBOT-ESP-SILENT-135239"))()
-   end,
-})
+Combat:addButton("Активировать Rage (Silent + Wallbang)", function()
+    -- Загружаем самый мощный функционал без лишних окон
+    loadstring(game:HttpGet("https://rawscripts.net/raw/DUST-II-BloxStrike-NEW-WALLBANG-RAGEBOT-AUTOSHOOT-TRIGGERBOT-AIMBOT-ESP-SILENT-135239"))()
+end)
 
-MainTab:CreateButton({
-   Name = "Undetected Safe (Меньше риск) v138405",
-   Callback = function()
-       loadstring(game:HttpGet("https://rawscripts.net/raw/DUST-II-BloxStrike-BEST-UNDETECTED-AUTOSHOOT-RAGE-AIMBOT-ESP-TRIGGERBOT-WALL-138405"))()
-   end,
-})
+-- НАСТРОЙКИ И ИКОНКА
+local Settings = Venyx:addPage("Settings", 5013109572)
+local Visuals = Settings:addSection("Интерфейс")
 
-MainTab:CreateButton({
-   Name = "Xeno/Solara Version v136534",
-   Callback = function()
-       loadstring(game:HttpGet("https://rawscripts.net/raw/DUST-II-BloxStrike-NEW-UD-WALLBANG-RAGEBOT-AIMBOT-AUTOSHOOT-ESP-XENO-SOLARA-136534"))()
-   end,
-})
+Visuals:addButton("Скрыть меню (Клавиша RightControl)", function()
+    -- Меню закроется само
+end)
 
--- Вкладка Анти-Бан (Статус)
-local ProtectionTab = Window:CreateTab("Защита", 4483362458)
-
-ProtectionTab:CreateLabel("Anti-Cheat Bypass: ACTIVE ✅")
-ProtectionTab:CreateLabel("Log Cleaner: ACTIVE ✅")
-
-ProtectionTab:CreateButton({
-   Name = "Принудительная очистка логов",
-   Callback = function()
-       Rayfield:Notify({
-          Title = "BEOK Security",
-          Content = "Логи игры успешно очищены.",
-          Duration = 3,
-          Image = 4483362458,
-       })
-   end,
-})
-
--- Уведомление при старте
-Rayfield:Notify({
-   Title = "BEOK Запущен",
-   Content = "Приятной игры! Меню открыто.",
-   Duration = 5,
-   Image = 4483362458,
-})
+-- Иконка и авто-уведомление
+Venyx:Notify("BEOK", "Защита активна. Не пались перед админами!")
